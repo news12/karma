@@ -1,0 +1,28 @@
+name: PR
+
+on:
+  push:
+    branches-ignore:
+      - master
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Installing node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: lts/*
+          cache: 'yarn'
+      - name: Install dependencies
+        run: yarn --frozen-lockfile
+      - name: Lint
+        timeout-minutes: 4
+        run: yarn lint:code
+      - name: TypeScript
+        timeout-minutes: 4
+        run: yarn lint:types
+      - name: Test
+        timeout-minutes: 4
+        run: yarn test --ci --coverage

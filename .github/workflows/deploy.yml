@@ -1,0 +1,45 @@
+name: Deploy to Vercel
+
+on:
+  push:
+    branches:
+      - master
+
+# used actions
+# https://github.com/actions/setup-node - sets up node env
+# https://github.com/actions/cache - caches build deps
+# https://github.com/actions/checkout - checks out repo
+# https://github.com/amondnet/vercel-action - initiates deploy to vercel
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Installing node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: lts/*
+          cache: 'yarn'
+      - name: Install dependencies
+        run: yarn --frozen-lockfile
+      - name: Lint
+        timeout-minutes: 4
+        run: yarn lint:code
+      - name: TypeScript
+        timeout-minutes: 3
+        run: yarn lint:types
+      - name: Test
+        timeout-minutes: 4
+        run: yarn test --ci --coverage
+      - name: Deploy
+        uses: amondnet/vercel-action@v20
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID}}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID}}
+          # SET THIS 👇 OR YOU WILL DEPLOY TO YOUR PERSONAL VERCEL NAMESPACE
+          # scope: ${{ secrets.VERCEL_TEAM_ID }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          github-comment: true
+          vercel-args: "--prod"
